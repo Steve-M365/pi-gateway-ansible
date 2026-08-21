@@ -1,0 +1,21 @@
+- name: Configure 2GB swap file for Pi4
+  when: not lookup('file', '/etc/rc.local') is regex('^.*dphys-swapfile.*$')
+  block:
+    - name: Install dphys-swapfile
+      apt:
+        name: dphys-swapfile
+        state: present
+      ignore_errors: true
+
+    - name: Set swap size to 2GB
+      lineinfile:
+        path: /etc/dphys-swapfile
+        regexp: '^CONF_SWAPSIZE'
+        line: 'CONF_SWAPSIZE=2048'
+        state: present
+
+    - name: Enable and start swap
+      service:
+        name: dphys-swapfile
+        state: started
+        enabled: true

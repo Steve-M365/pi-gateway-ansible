@@ -1,0 +1,24 @@
+- name: Install Ansible on Pi
+  pip:
+    name: ansible
+    state: present
+    executable: pip3
+
+- name: Create local playbook directory
+  file:
+    path: /opt/pi-gateway-ansible
+    state: directory
+    owner: pi
+    group: pi
+    mode: "0755"
+
+- name: Sync project files to Pi
+  synchronize:
+    src: "{{ playbook_dir }}/../../"
+    dest: /opt/pi-gateway-ansible
+    recursive: true
+    delete: false
+    owner: false
+    group: false
+  delegate_to: localhost
+  run_once: true

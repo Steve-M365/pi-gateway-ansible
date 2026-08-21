@@ -1,0 +1,29 @@
+# Ansible
+.vault_pass*
+*.retry
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# SSH keys
+*.pem
+*.key
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Setup wizard temp files
+/tmp/pi-gateway-setup-*
+
+# Logs
+*.log

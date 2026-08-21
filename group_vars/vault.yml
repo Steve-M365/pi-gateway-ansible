@@ -1,0 +1,2 @@
+vault_pihole_password: "changeme"
+vault_tailscale_auth_key: ""

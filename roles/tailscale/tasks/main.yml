@@ -1,0 +1,70 @@
+- name: Install Tailscale natively on host (Pi4 preferred)
+  when: tailscale_role | default('native') == 'native'
+  block:
+    - name: Install Tailscale via official script
+      shell: curl -fsSL https://tailscale.com/install.sh | sh
+      args:
+        creates: /usr/sbin/tailscale
+
+    - name: Start tailscaled
+      service:
+        name: tailscaled
+        state: started
+        enabled: true
+
+    - name: Bring Tailscale up with auth key and routes
+      command: >
+        tailscale up
+        --authkey={{ tailscale_auth_key }}
+        --hostname={{ tailscale_hostname }}
+        --accept-dns={{ tailscale_accept_routes }}
+        --advertise-routes={{ tailscale_advertise_routes }}
+        --advertise-exit-node
+      register: ts_up
+      changed_when: "'success' in ts_up.stdout or 'Logged out' in ts_up.stdout"
+      failed_when: false
+
+    - name: Confirm Tailscale status
+      command: tailscale status
+      register: ts_confirm
+      changed_when: false
+
+    - name: Reminder for admin console steps
+      debug:
+        msg:
+          - "Complete these in the Tailscale admin console:"
+          - "1. Approve subnet route {{ tailscale_advertise_routes }}"
+          - "2. Enable exit node for {{ tailscale_hostname }}"
+
+- name: Optional Tailscale container fallback
+  when: tailscale_role == 'container'
+  block:
+    - name: Ensure internal Docker network exists
+      community.docker.docker_network:
+        name: "{{ docker_network_name | default('internal') }}"
+        driver: bridge
+        state: present
+
+    - name: Ensure Tailscale container state
+      community.docker.docker_container:
+        name: tailscale
+        image: tailscale/tailscale:stable
+        hostname: "{{ tailscale_hostname }}"
+        env:
+          TS_AUTHKEY: "{{ tailscale_auth_key }}"
+          TS_ROUTES: "{{ tailscale_advertise_routes }}"
+          TS_ACCEPT_DNS: "{{ tailscale_accept_routes }}"
+          TS_EXTRA_ARGS: "--advertise-exit-node"
+          TS_STATE_DIR: /var/lib/tailscale
+        volumes:
+          - /dev/net/tun:/dev/net/tun
+          - "{{ docker_compose_dir }}/tailscale/state:/var/lib/tailscale"
+        network_mode: host
+        capabilities:
+          - NET_ADMIN
+          - SYS_MODULE
+        sysctls:
+          net.ipv4.ip_forward: "1"
+          net.ipv6.conf.all.forwarding: "0"
+        restart_policy: unless-stopped
+        state: started

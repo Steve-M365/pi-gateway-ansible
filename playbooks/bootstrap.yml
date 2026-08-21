@@ -1,0 +1,9 @@
+---
+- name: Bootstrap Pi gateway host
+  hosts: gateway
+  become: true
+  roles:
+    - base_os
+    - security_hardening
+    - docker_engine
+    - ansible_self_install

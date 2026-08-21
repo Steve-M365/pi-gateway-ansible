@@ -1,0 +1,39 @@
+---
+# Lightweight defaults for Pi4 2GB
+deployment_mode: "minimal"
+monitoring_mode: "lightweight"
+tailscale_role: "native"
+
+# Network
+lan_interface: "eth1"
+wan_interface: "eth0"
+lan_subnet: "192.168.10.0/24"
+lan_ip: "192.168.10.1"
+lan_cidr: "24"
+gateway_ip: "192.168.10.1"
+
+# Services
+traefik_dashboard_port: 8080
+domain_suffix: ".internal"
+default_timezone: "Australia/Sydney"
+pihole_password: "changeme"
+pihole_upstream_dns: "1.1.1.1"
+
+# Tailscale
+tailscale_enabled: true
+tailscale_auth_key: ""
+tailscale_hostname: "pi-gateway"
+tailscale_advertise_routes: "192.168.10.0/24"
+tailscale_accept_routes: "true"
+tailscale_exit_node: "true"
+
+# Docker
+docker_compose_dir: "/opt/pi-gateway"
+docker_compose_file: "{{ docker_compose_dir }}/docker-compose.yml"
+docker_network_name: "internal"
+
+# Security
+ssh_port: "22"
+
+# Pi4 optimizations
+enable_swap: true

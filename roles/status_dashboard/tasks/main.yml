@@ -1,0 +1,82 @@
+- name: Install Python3 + Flask on host
+  apt:
+    name:
+      - python3
+      - python3-pip
+      - python3-flask
+    state: present
+    install_recommends: false
+
+- name: Ensure status API directory exists
+  file:
+    path: /opt/pi-gateway/status-api
+    state: directory
+    mode: "0755"
+    owner: pi
+    group: pi
+
+- name: Create templates directory
+  file:
+    path: /opt/pi-gateway/status-api/templates
+    state: directory
+    mode: "0755"
+    owner: pi
+    group: pi
+
+- name: Copy status API script
+  copy:
+    src: files/status-api.py
+    dest: /opt/pi-gateway/status-api/status-api.py
+    mode: "0755"
+    owner: pi
+    group: pi
+
+- name: Copy status dashboard HTML
+  copy:
+    src: files/status-dashboard.html
+    dest: /opt/pi-gateway/status-api/templates/status-dashboard.html
+    mode: "0644"
+    owner: pi
+    group: pi
+
+- name: Install Flask in virtual environment
+  pip:
+    name: flask
+    state: present
+    virtualenv: /opt/pi-gateway/status-api/venv
+    virtualenv_python: python3
+
+- name: Create systemd service for status API
+  copy:
+    dest: /etc/systemd/system/status-api.service
+    content: |
+      [Unit]
+      Description=Pi Gateway Status API
+      After=network.target docker.service
+      Requires=docker.service
+
+      [Service]
+      Type=simple
+      User=pi
+      WorkingDirectory=/opt/pi-gateway/status-api
+      ExecStart=/opt/pi-gateway/status-api/venv/bin/python /opt/pi-gateway/status-api/status-api.py
+      Restart=always
+      RestartSec=10
+      Environment=PYTHONUNBUFFERED=1
+
+      [Install]
+      WantedBy=multi-user.target
+    mode: "0644"
+  notify: Reload systemd
+
+- name: Enable and start status API
+  service:
+    name: status-api
+    state: started
+    enabled: true
+
+handlers:
+  - name: Reload systemd
+    systemd:
+      daemon_reload: true
+    listen: "Reload systemd"

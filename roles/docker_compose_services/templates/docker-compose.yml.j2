@@ -1,0 +1,252 @@
+version: "3.9"
+
+networks:
+  internal:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+
+volumes:
+  pihole_etc:
+  pihole_dnsmasq:
+  traefik_data:
+  traefik_certs:
+  tailscale_state:
+
+services:
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    environment:
+      - TZ={{ default_timezone | default('Australia/Sydney') }}
+      - WEBPASSWORD={{ pihole_password }}
+      - DNSMASQ_LISTENING=all
+    volumes:
+      - ./pihole/etc:/etc/pihole
+      - ./pihole/etc-dnsmasq.d:/etc/dnsmasq.d
+    networks:
+      - internal
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pihole.rule=Host(`pihole{{ domain_suffix }}`)"
+      - "traefik.http.services.pihole.loadbalancer.server.port=80"
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: '0.5'
+        reservations:
+          memory: 128m
+          cpus: '0.25'
+
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.forwardedheaders.insecure=true"
+      - "--log.level=INFO"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/data:/data
+      - ./traefik/certs:/certs
+    networks:
+      - internal
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: '0.25'
+        reservations:
+          memory: 64m
+          cpus: '0.1'
+
+  tailscale:
+    image: tailscale/tailscale:stable
+    container_name: tailscale
+    hostname: "{{ tailscale_hostname }}"
+    environment:
+      - TS_AUTHKEY={{ tailscale_auth_key }}
+      - TS_ROUTES={{ tailscale_advertise_routes }}
+      - TS_ACCEPT_DNS={{ tailscale_accept_routes }}
+      - TS_EXTRA_ARGS=--advertise-exit-node
+      - TS_STATE_DIR=/var/lib/tailscale
+    volumes:
+      - /dev/net/tun:/dev/net/tun
+      - ./tailscale/state:/var/lib/tailscale
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv6.conf.all.forwarding=0
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: '0.25'
+        reservations:
+          memory: 64m
+          cpus: '0.1'
+
+{% if deployment_mode == 'full' %}
+  smokeping:
+    image: linuxserver/smokeping:latest
+    container_name: smokeping
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ={{ default_timezone | default('Australia/Sydney') }}
+    volumes:
+      - ./smokeping/data:/data
+    networks:
+      - internal
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.smokeping.rule=Host(`smokeping{{ domain_suffix }}`)"
+      - "traefik.http.services.smokeping.loadbalancer.server.port=80"
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: '0.25'
+        reservations:
+          memory: 64m
+          cpus: '0.1'
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    pid: host
+    network_mode: host
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+          cpus: '0.1'
+        reservations:
+          memory: 32m
+          cpus: '0.05'
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    network_mode: host
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: '0.2'
+        reservations:
+          memory: 64m
+          cpus: '0.1'
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus/data:/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.size=256MB"
+    networks:
+      - internal
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=Host(`prometheus{{ domain_suffix }}`)"
+      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: '0.3'
+        reservations:
+          memory: 128m
+          cpus: '0.15'
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD={{ pihole_password }}
+      - GF_INSTALL_PLUGINS=
+    volumes:
+      - ./grafana/data:/var/lib/grafana
+    networks:
+      - internal
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana{{ domain_suffix }}`)"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: '0.3'
+        reservations:
+          memory: 128m
+          cpus: '0.15'
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: uptime-kuma
+    volumes:
+      - ./uptime/data:/app/data
+    networks:
+      - internal
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.uptime.rule=Host(`uptime{{ domain_suffix }}`)"
+      - "traefik.http.services.uptime.loadbalancer.server.port=3001"
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: '0.2'
+        reservations:
+          memory: 64m
+          cpus: '0.1'
+{% endif %}
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - TZ={{ default_timezone | default('Australia/Sydney') }}
+    command: --schedule "0 0 4 * * *"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+          cpus: '0.1'
+        reservations:
+          memory: 32m
+          cpus: '0.05"

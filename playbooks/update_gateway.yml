@@ -1,0 +1,28 @@
+---
+- name: Update gateway containers safely
+  hosts: gateway
+  become: true
+  tasks:
+    - name: Pull latest images
+      community.docker.docker_compose_v2:
+        project_src: "{{ docker_compose_dir }}"
+        pull: true
+      register: pull_result
+
+    - name: Recreate containers
+      community.docker.docker_compose_v2:
+        project_src: "{{ docker_compose_dir }}"
+        build: never
+        recreate: always
+      register: up_result
+
+    - name: Prune old images
+      community.docker.docker_image_prune:
+        images: untagged
+        dangling: true
+
+    - name: Report status
+      debug:
+        msg:
+          - "Pull changed: {{ pull_result.changed }}"
+          - "Containers recreated: {{ up_result.changed }}"

@@ -1,0 +1,61 @@
+---
+- name: Review gateway state
+  hosts: gateway
+  become: true
+  gather_facts: true
+  tasks:
+    - name: List containers
+      community.docker.docker_container_info:
+        containers: all
+      register: containers
+
+    - name: Tailscale status
+      command: tailscale status
+      register: ts_status
+      changed_when: false
+
+    - name: Active routes
+      command: ip route show
+      register: routes
+
+    - name: Listening ports
+      command: ss -tlnp
+      register: ports
+
+    - name: Disk usage
+      command: df -h
+      register: disk
+
+    - name: Memory
+      command: free -h
+      register: mem
+
+    - name: Generate review report
+      copy:
+        dest: "/tmp/gateway-review-{{ ansible_date_time.iso8601_basic_short }}.txt"
+        content: |
+          === GATEWAY REVIEW ===
+          Date: {{ ansible_date_time.iso8601 }}
+          Host: {{ inventory_hostname }}
+          LAN: {{ lan_ip }}/{{ lan_cidr }}
+          WAN: {{ ansible_default_ipv4.address }}
+
+          --- Routes ---
+          {{ routes.stdout }}
+
+          --- Listening ports ---
+          {{ ports.stdout }}
+
+          --- Disk ---
+          {{ disk.stdout }}
+
+          --- Memory ---
+          {{ mem.stdout }}
+
+          --- Tailscale ---
+          {{ ts_status.stdout }}
+
+          --- Containers ---
+          {% for c in containers.containers %}
+          {{ c.container.Name }}: {{ c.container.State.Status }} ({{ c.container.Image }})
+          {% endfor %}

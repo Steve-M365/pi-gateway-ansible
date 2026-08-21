@@ -1,0 +1,9 @@
+---
+- name: Deploy full gateway stack
+  hosts: gateway
+  become: true
+  roles:
+    - networking
+    - tailscale
+    - docker_compose_services
+    - status_dashboard

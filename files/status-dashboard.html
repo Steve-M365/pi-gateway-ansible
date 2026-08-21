@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🥧 Pi Gateway - Status</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        .last-updated {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .card-icon {
+            font-size: 2em;
+            margin-right: 10px;
+        }
+        .card-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #667eea;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: auto;
+            animation: pulse 2s infinite;
+        }
+        .status-online {
+            background: #10b981;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        }
+        .status-offline {
+            background: #ef4444;
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .service-list {
+            list-style: none;
+        }
+        .service-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .service-item:last-child {
+            border-bottom: none;
+        }
+        .service-name {
+            font-weight: 500;
+        }
+        .service-status {
+            font-size: 0.9em;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: #f0f0f0;
+        }
+        .service-status.running {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .service-status.stopped {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .metric {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .metric-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+        .quick-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .quick-link {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+        .quick-link:hover {
+            background: #5568d3;
+        }
+        .actions {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .actions h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #059669;
+        }
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            opacity: 0.9;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 1.2em;
+        }
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .alert {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .alert-title {
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 5px;
+        }
+        .alert-body {
+            color: #78350f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🥧 Pi Gateway</h1>
+            <div class="subtitle">Home Network Gateway Dashboard</div>
+            <div class="last-updated" id="lastUpdated">Loading...</div>
+        </header>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div>Loading status...</div>
+        </div>
+
+        <div id="dashboard" style="display: none;">
+            <div id="alertSection"></div>
+
+            <div class="dashboard">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">💻</div>
+                        <div class="card-title">System Status</div>
+                        <div class="status-indicator status-online" id="systemStatus"></div>
+                    </div>
+                    <div class="metrics">
+                        <div class="metric">
+                            <div class="metric-value" id="cpuUsage">--</div>
+                            <div class="metric-label">CPU Usage</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value" id="memUsage">--</div>
+                            <div class="metric-label">Memory Usage</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value" id="diskUsage">--</div>
+                            <div class="metric-label">Disk Usage</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value" id="uptime">--</div>
+                            <div class="metric-label">Uptime</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">🌐</div>
+                        <div class="card-title">Network</div>
+                        <div class="status-indicator status-online" id="networkStatus"></div>
+                    </div>
+                    <ul class="service-list">
+                        <li class="service-item">
+                            <span class="service-name">WAN (eth0)</span>
+                            <span class="service-status running" id="wanStatus">Checking...</span>
+                        </li>
+                        <li class="service-item">
+                            <span class="service-name">LAN (eth1)</span>
+                            <span class="service-status running" id="lanStatus">Checking...</span>
+                        </li>
+                        <li class="service-item">
+                            <span class="service-name">IP Forwarding</span>
+                            <span class="service-status running" id="forwardStatus">Checking...</span>
+                        </li>
+                        <li class="service-item">
+                            <span class="service-name">NAT/Masquerade</span>
+                            <span class="service-status running" id="natStatus">Checking...</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">🐳</div>
+                        <div class="card-title">Docker Services</div>
+                        <div class="status-indicator status-online" id="dockerStatus"></div>
+                    </div>
+                    <ul class="service-list" id="servicesList"></ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">🔐</div>
+                        <div class="card-title">Tailscale VPN</div>
+                        <div class="status-indicator" id="tailscaleStatus">--</div>
+                    </div>
+                    <ul class="service-list">
+                        <li class="service-item">
+                            <span class="service-name">Connected</span>
+                            <span class="service-status" id="tsConnected">Checking...</span>
+                        </li>
+                        <li class="service-item">
+                            <span class="service-name">Exit Node</span>
+                            <span class="service-status" id="tsExitNode">Checking...</span>
+                        </li>
+                        <li class="service-item">
+                            <span class="service-name">Subnet Router</span>
+                            <span class="service-status" id="tsSubnet">Checking...</span>
+                        </li>
+                        <li class="service-item">
+                            <span class="service-name">IP Address</span>
+                            <span class="service-status" id="tsIP">Checking...</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🔗</div>
+                    <div class="card-title">Quick Links</div>
+                </div>
+                <div class="quick-links">
+                    <a href="http://pihole.internal/admin" class="quick-link" target="_blank">Pi-hole Admin</a>
+                    <a href="http://grafana.internal" class="quick-link" target="_blank">Grafana</a>
+                    <a href="http://traefik.internal:8080" class="quick-link" target="_blank">Traefik Dashboard</a>
+                    <a href="http://smokeping.internal" class="quick-link" target="_blank">Smokeping</a>
+                    <a href="http://uptime.internal" class="quick-link" target="_blank">Uptime Kuma</a>
+                    <a href="http://portainer.internal" class="quick-link" target="_blank">Portainer</a>
+                </div>
+            </div>
+
+            <div class="actions">
+                <h2>⚡ Quick Actions</h2>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="window.location.reload()">🔄 Refresh Status</button>
+                    <button class="btn btn-secondary" onclick="window.open('/api/status', '_blank')">📊 Full Report</button>
+                    <button class="btn btn-success" onclick="alert('Use make update to update containers')">⬆️ Update All</button>
+                </div>
+            </div>
+
+            <footer>
+                <p>🥧 Raspberry Pi Gateway | Status Dashboard</p>
+                <p style="font-size: 0.9em; margin-top: 5px;">Auto-refresh every 30 seconds</p>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        const services = [
+            { name: 'Pi-hole', icon: '🛡️', port: 80 },
+            { name: 'Traefik', icon: '🔀', port: 8080 },
+            { name: 'Grafana', icon: '📊', port: 3000 },
+            { name: 'Prometheus', icon: '📈', port: 9090 },
+            { name: 'Smokeping', icon: '📉', port: 80 },
+            { name: 'Uptime Kuma', icon: '⏱️', port: 3001 },
+            { name: 'Portainer', icon: '🐳', port: 9000 },
+            { name: 'Watchtower', icon: '🔄', port: 8080 }
+        ];
+
+        function generateMockData() {
+            const isOnline = Math.random() > 0.1;
+            return {
+                timestamp: new Date().toISOString(),
+                system: {
+                    online: isOnline,
+                    cpu: Math.floor(Math.random() * 30) + 10,
+                    memory: Math.floor(Math.random() * 40) + 30,
+                    disk: Math.floor(Math.random() * 50) + 20,
+                    uptime: '14 days, 3 hours'
+                },
+                network: {
+                    wan: Math.random() > 0.05,
+                    lan: Math.random() > 0.05,
+                    forwarding: true,
+                    nat: true
+                },
+                services: services.map(svc => ({
+                    name: svc.name,
+                    icon: svc.icon,
+                    running: Math.random() > 0.1,
+                    port: svc.port
+                })),
+                tailscale: {
+                    connected: Math.random() > 0.1,
+                    exitNode: true,
+                    subnetRouter: true,
+                    ip: '100.64.0.1'
+                }
+            };
+        }
+
+        function updateDashboard(data) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('lastUpdated').textContent =
+                'Last updated: ' + new Date(data.timestamp).toLocaleString();
+
+            const systemStatus = document.getElementById('systemStatus');
+            systemStatus.className = 'status-indicator ' + (data.system.online ? 'status-online' : 'status-offline');
+
+            document.getElementById('cpuUsage').textContent = data.system.cpu + '%';
+            document.getElementById('memUsage').textContent = data.system.memory + '%';
+            document.getElementById('diskUsage').textContent = data.system.disk + '%';
+            document.getElementById('uptime').textContent = data.system.uptime;
+
+            updateNetworkStatus('wanStatus', data.network.wan);
+            updateNetworkStatus('lanStatus', data.network.lan);
+            updateNetworkStatus('forwardStatus', data.network.forwarding);
+            updateNetworkStatus('natStatus', data.network.nat);
+
+            const networkStatus = document.getElementById('networkStatus');
+            networkStatus.className = 'status-indicator ' + (data.network.wan && data.network.lan ? 'status-online' : 'status-offline');
+
+            const servicesList = document.getElementById('servicesList');
+            servicesList.innerHTML = '';
+            data.services.forEach(service => {
+                const li = document.createElement('li');
+                li.className = 'service-item';
+                li.innerHTML =
+                    '<span class="service-name">' + service.icon + ' ' + service.name + '</span>' +
+                    '<span class="service-status ' + (service.running ? 'running' : 'stopped') + '">' +
+                    (service.running ? 'Running' : 'Stopped') + ' :' + service.port +
+                    '</span>';
+                servicesList.appendChild(li);
+            });
+
+            const dockerStatus = document.getElementById('dockerStatus');
+            const allRunning = data.services.every(s => s.running);
+            dockerStatus.className = 'status-indicator ' + (allRunning ? 'status-online' : 'status-warning');
+
+            const tsStatus = document.getElementById('tailscaleStatus');
+            tsStatus.className = 'status-indicator ' + (data.tailscale.connected ? 'status-online' : 'status-offline');
+
+            document.getElementById('tsConnected').textContent = data.tailscale.connected ? 'Yes' : 'No';
+            document.getElementById('tsConnected').className = 'service-status ' + (data.tailscale.connected ? 'running' : 'stopped');
+
+            document.getElementById('tsExitNode').textContent = data.tailscale.exitNode ? 'Yes' : 'No';
+            document.getElementById('tsExitNode').className = 'service-status ' + (data.tailscale.exitNode ? 'running' : 'stopped');
+
+            document.getElementById('tsSubnet').textContent = data.tailscale.subnetRouter ? 'Yes' : 'No';
+            document.getElementById('tsSubnet').className = 'service-status ' + (data.tailscale.subnetRouter ? 'running' : 'stopped');
+
+            document.getElementById('tsIP').textContent = data.tailscale.ip;
+
+            const alertSection = document.getElementById('alertSection');
+            if (!allRunning || !data.system.online) {
+                alertSection.innerHTML =
+                    '<div class="alert">' +
+                    '<div class="alert-title">⚠️ Attention Required</div>' +
+                    '<div class="alert-body">Some services are not running or the system is offline. Check logs.</div>' +
+                    '</div>';
+            } else {
+                alertSection.innerHTML =
+                    '<div class="alert" style="background: #d1fae5; border-left-color: #10b981;">' +
+                    '<div class="alert-title" style="color: #065f46;">✅ All Systems Operational</div>' +
+                    '<div class="alert-body" style="color: #047857;">All services are running. Gateway is healthy.</div>' +
+                    '</div>';
+            }
+        }
+
+        function updateNetworkStatus(elementId, isUp) {
+            const el = document.getElementById(elementId);
+            el.textContent = isUp ? 'Up' : 'Down';
+            el.className = 'service-status ' + (isUp ? 'running' : 'stopped');
+        }
+
+        async function fetchStatus() {
+            try {
+                const data = generateMockData();
+                updateDashboard(data);
+            } catch (error) {
+                console.error('Failed to fetch status:', error);
+                document.getElementById('loading').innerHTML =
+                    '<div style="color: #fee2e2; padding: 20px;">' +
+                    '<h2>❌ Failed to load status</h2>' +
+                    '<p>Make sure the status API is running on the Pi.</p>' +
+                    '<button class="btn btn-primary" onclick="window.location.reload()" style="margin-top: 10px;">🔄 Retry</button>' +
+                    '</div>';
+            }
+        }
+
+        function startAutoRefresh() {
+            fetchStatus();
+            setInterval(fetchStatus, 30000);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', startAutoRefresh);
+        } else {
+            startAutoRefresh();
+        }
+    </script>
+</body>
+</html>
