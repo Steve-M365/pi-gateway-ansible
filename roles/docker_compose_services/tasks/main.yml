@@ -1,0 +1,32 @@
+---
+- name: Ensure compose directory exists
+  file:
+    path: "{{ docker_compose_dir }}"
+    state: directory
+    mode: "0755"
+    owner: pi
+    group: pi
+
+- name: Create volume directories
+  file:
+    path: "{{ docker_compose_dir }}/{{ item }}"
+    state: directory
+    mode: "0755"
+    owner: pi
+    group: pi
+  loop:
+    - pihole/etc
+    - pihole/etc-dnsmasq.d
+    - traefik/data
+    - traefik/certs
+    - tailscale/state
+    - grafana/data
+    - loki/data
+    - promtail
+    - syslog-ng/config
+    - syslog-ng/log
+
+- name: Deploy stack
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker_compose_dir }}"
+    state: present

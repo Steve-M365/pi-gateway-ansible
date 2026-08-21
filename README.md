@@ -22,6 +22,8 @@ Your Raspberry Pi 4 becomes your home network's **central nervous system**:
 | **Tailscale** | VPN exit node | Tailnet |
 | **Portainer** | Container management | `http://portainer.internal` (full mode) |
 | **Watchtower** | Auto-updates | Background |
+| **Loki + syslog-ng** | Centralised logs | `http://loki.internal:3100` |
+| **Promtail** | Log shipping | Background |
 | **Status Dashboard** | Gateway health | `http://pi-gateway.internal:5000` |
 
 ---

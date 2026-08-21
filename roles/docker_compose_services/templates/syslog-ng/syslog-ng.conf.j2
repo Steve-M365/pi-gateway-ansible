@@ -1,0 +1,33 @@
+@version: 3.37
+@include "scl.conf"
+
+options {
+  chain_hostnames(off);
+  keep-hostname(on);
+  log_fifo_size(1000);
+  stats(level(2));
+};
+
+source s_net {
+  udp(ip({{ syslog_listen_ip | default('0.0.0.0') }}) port({{ syslog_listen_port | default(514) }}) );
+  tcp(ip({{ syslog_listen_ip | default('0.0.0.0') }}) port({{ syslog_listen_port | default(514) }}) );
+};
+
+source s_internal {
+  internal();
+};
+
+destination d_loki {
+  http(
+    url("http://loki:3100/loki/api/v1/push")
+    method("POST")
+    headers("Content-Type" "application/json")
+    tls(verify-remote-certificate(no))
+  );
+};
+
+log {
+  source(s_net);
+  source(s_internal);
+  destination(d_loki);
+};

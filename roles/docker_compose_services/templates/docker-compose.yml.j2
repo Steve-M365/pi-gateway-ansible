@@ -250,3 +250,64 @@ services:
         reservations:
           memory: 32m
           cpus: '0.05"
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    volumes:
+      - ./loki/data:/loki
+      - ./loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+    command: -config.file=/etc/loki/loki-config.yml
+    networks:
+      - internal
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: '0.2'
+        reservations:
+          memory: 128m
+          cpus: '0.1'
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    volumes:
+      - /var/log:/var/log
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - internal
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: '0.15'
+        reservations:
+          memory: 64m
+          cpus: '0.05'
+
+  syslog-ng:
+    image: lscr.io/linuxserver/syslog-ng:latest
+    container_name: syslog-ng
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ={{ default_timezone | default('Australia/Sydney') }}
+    volumes:
+      - ./syslog-ng/config:/config
+      - ./syslog-ng/log:/log
+    ports:
+      - "{{ syslog_listen_port }}:{{ syslog_listen_port }}/{{ syslog_listen_proto | default('udp') }}"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: '0.15'
+        reservations:
+          memory: 64m
+          cpus: '0.05'

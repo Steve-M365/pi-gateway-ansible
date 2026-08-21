@@ -37,3 +37,13 @@ ssh_port: "22"
 
 # Pi4 optimizations
 enable_swap: true
+
+# Syslog / log aggregation (Graylog-lite via Loki)
+enable_syslog_server: true
+syslog_receiver_enabled: true
+syslog_listen_ip: "0.0.0.0"
+syslog_listen_port: 514
+syslog_listen_proto: "udp"
+loki_retention_period: 168h
+loki_log_volume: loki_data
+syslog_backup_repo: "Steve-M365/pi-gateway-backups"

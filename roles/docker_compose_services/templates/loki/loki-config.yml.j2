@@ -1,0 +1,52 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: info
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki
+  storage:
+    filesystem:
+      directory: /loki
+  compactor:
+    working_directory: /loki
+    shared_store: filesystem
+  replication_factor: 1
+
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  filesystem:
+    directory: /loki
+
+limits_config:
+  enforce_metric_name: false
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+  retention_period: {{ loki_retention_period | default('168h') }}
+
+compactor:
+  retention_enabled: true
+  delete_request_store: filesystem
+
+query_range:
+  results_cache:
+    cache:
+      memcached_client:
+        addresses: 127.0.0.1:11211
+        timeout: 1s
+        max_idle_conns: 100
+
+frontend:
+  max_outstanding_per_tenant: 2048
