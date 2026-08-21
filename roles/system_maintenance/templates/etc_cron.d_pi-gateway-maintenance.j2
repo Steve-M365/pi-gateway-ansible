@@ -1,0 +1,48 @@
+#!/bin/sh
+# Pi Gateway Maintenance Cron
+# Managed by Ansible - do not edit manually
+
+# ┌───────────── System Maintenance Tasks ─────────────────────┐
+# │  Time  │  Task                                              │
+# └─────────────┬──────────────────────────────────────────────┬─┘
+# │  3:00   │  Backup to GitHub (daily)                        │
+# │  3:30   │  Docker cleanup (prune unused images/volumes)     │
+# │  4:00   │  System update (security patches)                 │
+# │  4:30   │  Log check and alert                              │
+# │  5:00   │  Self-healing checks (services, disk, memory)     │
+# │  5:30   │  System optimization (swap, temp, throttling)    │
+# │  6:00   │  DNS cache flush (Pi-hole)                        │
+# │  6:30   │  Network connectivity check                       │
+# └─────────────┴──────────────────────────────────────────────┴─┘
+
+# ── Backup ──────────────────────────────────────────────────────
+0 3 * * *   pi   /opt/pi-gateway-ansible/files/pi-backup.sh >> /var/log/pi-gateway/backup.log 2>&1
+
+# ── Docker Cleanup ──────────────────────────────────────────────
+30 3 * * *  pi   /usr/bin/docker system prune -f --filter "until=168h" >> /var/log/pi-gateway/docker-cleanup.log 2>&1
+30 3 * * *  pi   /usr/bin/docker volume prune -f >> /var/log/pi-gateway/docker-cleanup.log 2>&1
+
+# ── System Updates (security patches only) ─────────────────────
+# NOTE: run `apt update && apt upgrade` manually or pin to Sunday for regular restarts.
+# This cron template intentionally skips automatic unattended upgrades to avoid surprise reboots on a gateway.
+
+# ── Log Check and Alert ─────────────────────────────────────────
+30 4 * * *  pi   /opt/pi-gateway-ansible/files/scripts/check-logs.sh >> /var/log/pi-gateway/log-check.log 2>&1
+
+# ── Self-Healing Checks ──────────────────────────────────────────
+0 5 * * *   pi   /opt/pi-gateway-ansible/files/scripts/self-heal.sh >> /var/log/pi-gateway/self-heal.log 2>&1
+
+# ── System Optimization ─────────────────────────────────────────
+30 5 * * *  pi   /opt/pi-gateway-ansible/files/scripts/optimize.sh >> /var/log/pi-gateway/optimize.log 2>&1
+
+# ── DNS Cache Flush (Pi-hole) ───────────────────────────────────
+0 6 * * *   pi   /usr/bin/docker exec pihole pihole-FTL -- flush >> /var/log/pi-gateway/dns-flush.log 2>&1 || true
+
+# ── Network Connectivity Check ──────────────────────────────────
+30 6 * * *  pi   /opt/pi-gateway-ansible/files/scripts/network-check.sh >> /var/log/pi-gateway/network-check.log 2>&1
+
+# ── Weekly Deep Health Check (Sunday 6 AM) ─────────────────────
+0 6 * * 0   pi   /opt/pi-gateway-ansible/files/scripts/weekly-health.sh >> /var/log/pi-gateway/weekly-health.log 2>&1
+
+# ── Monthly SD Card Health Check ────────────────────────────────
+0 7 1 * *   root /usr/bin/fstrim -v / >> /var/log/pi-gateway/fstrim.log 2>&1 || true

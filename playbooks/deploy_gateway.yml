@@ -8,3 +8,4 @@
     - docker_compose_services
     - status_dashboard
     - backup_to_github
+    - system_maintenance
