@@ -1,0 +1,57 @@
+---
+- name: Install backup script and config
+  hosts: gateway
+  become: true
+  tasks:
+    - name: Create backup directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - /etc/pi-gateway
+        - /opt/pi-gateway-ansible/files
+
+    - name: Deploy backup configuration
+      copy:
+        src: files/backup-config.yml
+        dest: /etc/pi-gateway/backup-config.yml
+        mode: "0644"
+        owner: root
+        group: root
+
+    - name: Deploy backup script
+      copy:
+        src: files/pi-backup.sh
+        dest: /opt/pi-gateway-ansible/files/pi-backup.sh
+        mode: "0755"
+        owner: pi
+        group: pi
+
+    - name: Create GitHub token directory
+      file:
+        path: /etc/pi-gateway
+        state: directory
+        mode: "0700"
+        owner: root
+        group: root
+
+    - name: Install GitHub token from vault
+      copy:
+        dest: /etc/pi-gateway/github-token
+        content: "{{ github_backup_token | default('') }}"
+        mode: "0600"
+        owner: root
+        group: root
+      no_log: true
+      when: github_backup_token | default('') != ''
+
+    - name: Configure cron for daily backup
+      cron:
+        name: "pi-gateway backup to GitHub"
+        job: "/opt/pi-gateway-ansible/files/pi-backup.sh >> /var/log/pi-gateway-backup.log 2>&1"
+        user: pi
+        hour: "3"
+        minute: "0"
+        state: present
+      when: backup_to_github_enabled | default(true)

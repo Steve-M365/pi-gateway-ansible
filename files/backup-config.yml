@@ -1,0 +1,30 @@
+---
+# Backup configuration
+# This file is deployed to /etc/pi-gateway/backup-config.yml
+
+backup:
+  enabled: true
+  schedule: "0 3 * * *"  # Daily at 3 AM
+  retention_days: 30
+
+  github:
+    enabled: true
+    repo: "Steve-M365/pi-gateway-backups"
+    token_file: "/etc/pi-gateway/github-token"
+    branch: "backup-main"
+    tag_prefix: "backup-"
+
+  what:
+    include:
+      - docker-volumes   # Pi-hole, Grafana, Traefik, etc.
+      - ansible-config    # Playbooks and vars
+      - system-config     # Network, SSH, firewall
+      - status-report     # Ansible review output
+    exclude:
+      - "*.log"
+      - "tmp/*"
+
+  notifications:
+    on_success: true
+    on_failure: true
+    webhook_url: ""  # Optional: Slack/Discord webhook

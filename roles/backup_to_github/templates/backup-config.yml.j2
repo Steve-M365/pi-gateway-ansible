@@ -1,0 +1,23 @@
+---
+# Pi Gateway Backup Configuration
+
+backup:
+  enabled: {{ backup_to_github_enabled | default(true) }}
+  schedule: "0 3 * * *"
+  
+  github:
+    enabled: true
+    repo: "{{ github_backup_repo | default('Steve-M365/pi-gateway-backups') }}"
+    token_file: "/etc/pi-gateway/github-token"
+    branch: "backup-main"
+    tag_prefix: "backup-"
+  
+  what:
+    include:
+      - docker-volumes
+      - ansible-config
+      - system-config
+      - status-report
+    exclude:
+      - "*.log"
+      - "tmp/*"
