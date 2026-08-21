@@ -1,0 +1,11 @@
+- name: reload cron
+  service:
+    name: cron
+    state: reloaded
+  listen: "reload cron"
+
+- name: reload logrotate
+  service:
+    name: logrotate
+    state: reloaded
+  listen: "reload logrotate"

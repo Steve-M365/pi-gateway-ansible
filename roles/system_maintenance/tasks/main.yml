@@ -1,0 +1,57 @@
+---
+- name: Create maintenance directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+    owner: pi
+    group: pi
+  loop:
+    - /opt/pi-gateway-ansible/logs
+    - /var/log/pi-gateway
+    - /opt/pi-gateway-ansible/files/scripts
+
+- name: Deploy maintenance cron jobs
+  template:
+    src: etc_cron.d_pi-gateway-maintenance.j2
+    dest: /etc/cron.d/pi-gateway-maintenance
+    mode: "0644"
+    owner: root
+    group: root
+  notify: reload cron
+
+- name: Deploy maintenance scripts
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0755"
+    owner: pi
+    group: pi
+  loop:
+    - src: files/scripts/check-logs.sh
+      dest: /opt/pi-gateway-ansible/files/scripts/check-logs.sh
+    - src: files/scripts/self-heal.sh
+      dest: /opt/pi-gateway-ansible/files/scripts/self-heal.sh
+    - src: files/scripts/optimize.sh
+      dest: /opt/pi-gateway-ansible/files/scripts/optimize.sh
+    - src: files/scripts/network-check.sh
+      dest: /opt/pi-gateway-ansible/files/scripts/network-check.sh
+    - src: files/scripts/weekly-health.sh
+      dest: /opt/pi-gateway-ansible/files/scripts/weekly-health.sh
+
+- name: Configure logrotate for Pi gateway
+  copy:
+    dest: /etc/logrotate.d/pi-gateway
+    content: |
+      /var/log/pi-gateway/*.log /opt/pi-gateway-ansible/logs/*.log {
+          daily
+          rotate 14
+          compress
+          delaycompress
+          missingok
+          notifempty
+          maxsize 100M
+          su pi pi
+      }
+    mode: "0644"
+  notify: reload logrotate
