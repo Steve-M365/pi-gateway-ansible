@@ -58,8 +58,8 @@ ansible-playbook playbooks/deploy_gateway.yml -i inventory/hosts.yml --connectio
 
 Edit `group_vars/all.yml`:
 ```yaml
-lan_subnet: "192.168.20.0/24"
-lan_ip: "192.168.20.1"
+lan_subnet: "192.168.1.0/24"
+lan_ip: "192.168.1.1"
 lan_interface: "eth1"
 wan_interface: "eth0"
 ```
