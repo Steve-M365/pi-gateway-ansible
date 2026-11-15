@@ -31,9 +31,9 @@
     owner: pi
     group: pi
 
-- name: Copy status dashboard HTML
-  copy:
-    src: files/status-dashboard.html
+- name: Render status dashboard HTML
+  template:
+    src: templates/status-dashboard.html.j2
     dest: /opt/pi-gateway/status-api/templates/status-dashboard.html
     mode: "0644"
     owner: pi
@@ -75,8 +75,3 @@
     state: started
     enabled: true
 
-handlers:
-  - name: Reload systemd
-    systemd:
-      daemon_reload: true
-    listen: "Reload systemd"

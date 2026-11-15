@@ -217,7 +217,7 @@ pi-gateway-ansible/
 └── files/
     ├── prometheus.yml                 # Prometheus config (full mode)
     ├── status-api.py                 # Flask API
-    └── status-dashboard.html         # Web dashboard
+    └── status-dashboard.html.j2      # Web dashboard template
 ```
 
 ---
