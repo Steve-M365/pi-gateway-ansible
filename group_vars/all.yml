@@ -5,12 +5,16 @@ monitoring_mode: "lightweight"
 tailscale_role: "native"
 
 # Network
+#
+# These are generic example values and are safe to publish.
+# Real values for your own network belong in group_vars/all.local.yml,
+# which is gitignored and loaded automatically by Ansible.
 lan_interface: "eth1"
 wan_interface: "eth0"
-lan_subnet: "192.168.10.0/24"
-lan_ip: "192.168.10.1"
+lan_subnet: "192.168.1.0/24"
+lan_ip: "192.168.1.1"
 lan_cidr: "24"
-gateway_ip: "192.168.10.1"
+gateway_ip: "192.168.1.1"
 
 # Services
 traefik_dashboard_port: 8080
@@ -23,7 +27,7 @@ pihole_upstream_dns: "1.1.1.1"
 tailscale_enabled: true
 tailscale_auth_key: ""
 tailscale_hostname: "pi-gateway"
-tailscale_advertise_routes: "192.168.10.0/24"
+tailscale_advertise_routes: "{{ lan_subnet }}"
 tailscale_accept_routes: "true"
 tailscale_exit_node: "true"
 

@@ -1,8 +1,8 @@
 variables:
   lan_interface: "eth1"
   wan_interface: "eth0"
-  lan_subnet: "192.168.10.0/24"
-  lan_ip: "192.168.10.1"
+  lan_subnet: "192.168.1.0/24"
+  lan_ip: "192.168.1.1"
   lan_cidr: "24"
   deployment_mode: "minimal"   # minimal | full
   monitoring_mode: "lightweight" # lightweight | full

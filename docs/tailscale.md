@@ -35,7 +35,7 @@ Edit `group_vars/all.yml`:
 tailscale_enabled: true
 tailscale_auth_key: "{{ vault_tailscale_auth_key }}"
 tailscale_hostname: "pi-gateway"
-tailscale_advertise_routes: "192.168.10.0/24"
+tailscale_advertise_routes: "192.168.1.0/24"
 tailscale_accept_routes: "true"
 tailscale_exit_node: "true"
 tailscale_role: "native"  # or "container"
@@ -58,7 +58,7 @@ After deployment:
 1. Go to [Tailscale Admin Console](https://login.tailscale.com/admin/machines)
 2. Find `pi-gateway`
 3. Click "Edit route settings"
-4. Approve subnet route: `192.168.10.0/24`
+4. Approve subnet route: `192.168.1.0/24`
 5. Enable "Use as exit node"
 
 ## Using the Exit Node
@@ -75,7 +75,7 @@ tailscale up --exit-node=disable
 
 ## Subnet Router
 
-The Pi advertises your LAN (`192.168.10.0/24`) to your tailnet.
+The Pi advertises your LAN (`192.168.1.0/24`) to your tailnet.
 
 To access LAN devices from your tailnet:
 ```bash

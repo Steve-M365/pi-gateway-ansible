@@ -7,6 +7,23 @@
 
 ---
 
+## ⚠️ Your own network values
+
+The addresses in this repository are **generic examples** and are safe to
+publish. They are not the author's network.
+
+```bash
+cp group_vars/all.local.yml.example group_vars/all.local.yml
+# edit lan_subnet, lan_ip, gateway_ip, then:
+make deploy
+```
+
+`group_vars/all.local.yml` is gitignored and loaded automatically by Ansible.
+The deploy plays assert on the example `lan_ip` and stop before touching the
+network, so a fresh clone cannot silently target the wrong host.
+
+---
+
 ## 🎯 What This Does
 
 Your Raspberry Pi 4 becomes your home network's **central nervous system**:
@@ -161,7 +178,7 @@ This will:
 ### Manual Steps Required
 After first deploy, complete these in the **Tailscale admin console**:
 
-1. **Approve subnet route**: `192.168.10.0/24` (or your LAN subnet)
+1. **Approve subnet route**: `192.168.1.0/24` (or your LAN subnet)
 2. **Enable exit node**: Toggle "Use as exit node" for `pi-gateway`
 3. **On clients**: `tailscale up --exit-node=pi-gateway`
 
@@ -297,7 +314,7 @@ pi-gateway-ansible/
                                 │ eth1
                     ┌───────────▼─────────────┐
                     │   INTERNAL LAN          │
-                    │  192.168.10.0/24        │
+                    │  192.168.1.0/24        │
                     │  ┌─────────────────┐    │
                     │  │  Your Devices   │    │
                     │  │  (phones, PCs)  │    │
@@ -334,7 +351,7 @@ Your laptop (tailnet)
 After bootstrap, you can SSH into the Pi and run playbooks locally:
 
 ```bash
-ssh pi@192.168.10.1
+ssh pi@192.168.1.1
 cd /opt/pi-gateway-ansible
 ansible-playbook playbooks/deploy_gateway.yml -i inventory/hosts.yml --connection=local
 ```
@@ -347,7 +364,7 @@ Edit `group_vars/all.yml`:
 # Add more Smokeping targets
 smokeping_targets:
   - name: NAS
-    host: 192.168.10.50
+    host: 192.168.1.50
 
 # Change upstream DNS
 pihole_upstream_dns: "1.1.1.1,8.8.8.8"

@@ -116,11 +116,11 @@ network_config() {
     LAN_IF="${LAN_IF:-eth1}"
   fi
 
-  read -rp "LAN subnet [192.168.10.0/24]: " LAN_SUBNET
-  LAN_SUBNET="${LAN_SUBNET:-192.168.10.0/24}"
+  read -rp "LAN subnet [192.168.1.0/24]: " LAN_SUBNET
+  LAN_SUBNET="${LAN_SUBNET:-192.168.1.0/24}"
 
-  read -rp "Pi LAN IP [192.168.10.1]: " LAN_IP
-  LAN_IP="${LAN_IP:-192.168.10.1}"
+  read -rp "Pi LAN IP [192.168.1.1]: " LAN_IP
+  LAN_IP="${LAN_IP:-192.168.1.1}"
 
   read -rp "SSH port [22]: " SSH_PORT
   SSH_PORT="${SSH_PORT:-22}"

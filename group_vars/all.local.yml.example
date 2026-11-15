@@ -1,0 +1,11 @@
+---
+# Copy to group_vars/all.local.yml and set your real network values.
+# all.local.yml is gitignored and is never committed.
+lan_subnet: "192.168.1.0/24"
+lan_ip: "192.168.1.1"
+lan_cidr: "24"
+gateway_ip: "192.168.1.1"
+
+# Optional per-site overrides
+# pihole_upstream_dns: "1.1.1.1,8.8.8.8"
+# tailscale_auth_key: ""

@@ -40,7 +40,7 @@ ansible-playbook -i inventory/hosts.yml playbooks/review_gateway.yml --vault-id 
 After bootstrap, you can SSH into the Pi and run playbooks locally:
 
 ```bash
-ssh pi@192.168.10.1
+ssh pi@192.168.1.1
 cd /opt/pi-gateway-ansible
 ansible-playbook playbooks/deploy_gateway.yml -i inventory/hosts.yml --connection=local --vault-id vault@prompt
 ```
@@ -80,7 +80,7 @@ The Pi OS is not automatically updated. To update:
 ansible-playbook -i inventory/hosts.yml playbooks/update_os.yml --vault-id vault@prompt
 
 # Or manually on the Pi
-ssh pi@192.168.10.1
+ssh pi@192.168.1.1
 sudo apt update && sudo apt upgrade -y
 sudo reboot
 ```
@@ -171,7 +171,7 @@ docker compose down && docker compose up -d
 docker logs pihole
 
 # Test DNS locally
-dig @192.168.10.1 google.com
+dig @192.168.1.1 google.com
 
 # Check iptables
 sudo iptables -t nat -L POSTROUTING

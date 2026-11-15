@@ -1,5 +1,9 @@
 # Ansible
 .vault_pass*
+
+# Live network values (real subnets, IPs, hostnames)
+group_vars/all.local.yml
+
 *.retry
 
 # Python

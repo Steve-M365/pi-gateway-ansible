@@ -2,6 +2,9 @@
 set -euo pipefail
 
 LOG_FILE="/var/log/pi-gateway/network-check.log"
+# Override in the environment; defaults are generic examples.
+GATEWAY_IP="${GATEWAY_IP:-192.168.1.1}"
+DNS_SERVER="${DNS_SERVER:-$GATEWAY_IP}"
 
 log() {
   echo "[$(date +%Y-%m-%dT%H:%M:%S)] $*" | tee -a "$LOG_FILE"
@@ -18,7 +21,7 @@ check_wan() {
 }
 
 check_lan() {
-  if ping -c 1 -W 2 192.168.10.1 >/dev/null 2>&1; then
+  if ping -c 1 -W 2 "$GATEWAY_IP" >/dev/null 2>&1; then
     log "[OK] LAN gateway: reachable"
     return 0
   else
@@ -28,7 +31,7 @@ check_lan() {
 }
 
 check_dns() {
-  if dig @192.168.10.1 google.com +short +timeout=2 >/dev/null 2>&1; then
+  if dig @"$DNS_SERVER" google.com +short +timeout=2 >/dev/null 2>&1; then
     log "[OK] DNS resolution: working"
     return 0
   else

@@ -59,8 +59,8 @@ Edit `group_vars/all.yml`:
 # Network
 lan_interface: "eth1"
 wan_interface: "eth0"
-lan_subnet: "192.168.10.0/24"
-lan_ip: "192.168.10.1"
+lan_subnet: "192.168.1.0/24"
+lan_ip: "192.168.1.1"
 lan_cidr: "24"
 
 # Services
@@ -71,7 +71,7 @@ domain_suffix: ".internal"
 # Tailscale
 tailscale_auth_key: "tskey-auth-XXXX"
 tailscale_hostname: "pi-gateway"
-tailscale_advertise_routes: "192.168.10.0/24"
+tailscale_advertise_routes: "192.168.1.0/24"
 
 # Deployment mode: minimal | full
 deployment_mode: "minimal"
@@ -129,14 +129,14 @@ After the playbook completes:
 1. Go to [Tailscale Admin Console](https://login.tailscale.com/admin/machines)
 2. Find `pi-gateway` in the device list
 3. Click "Edit route settings"
-4. Approve subnet route: `192.168.10.0/24`
+4. Approve subnet route: `192.168.1.0/24`
 5. Enable "Use as exit node"
 
 ## Step 8: Configure Clients
 
 On your devices:
-1. Set DNS to `192.168.10.1` (Pi-hole)
-2. Set gateway to `192.168.10.1`
+1. Set DNS to `192.168.1.1` (Pi-hole)
+2. Set gateway to `192.168.1.1`
 3. For Tailscale exit node:
    ```bash
    tailscale up --exit-node=pi-gateway

@@ -2,7 +2,20 @@
 - name: Bootstrap Pi gateway host
   hosts: gateway
   become: true
+  pre_tasks:
+    - name: Refuse to deploy against the published example network values
+      ansible.builtin.assert:
+        that:
+          - lan_ip is defined and lan_ip | length > 0
+          - lan_ip != '192.168.1.1'
+        fail_msg: >-
+          lan_ip is still the published example default. Copy
+          group_vars/all.local.yml.example to group_vars/all.local.yml and set
+          your real lan_subnet, lan_ip and gateway_ip before deploying.
+          See README "Your own network values".
+        quiet: true
   roles:
+
     - base_os
     - security_hardening
     - docker_engine
